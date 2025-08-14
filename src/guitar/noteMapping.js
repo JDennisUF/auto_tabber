@@ -10,7 +10,7 @@ class NoteMapper {
 
         const matches = [];
 
-        // Check all string/fret combinations
+        // Check all string/fret combinations, prioritizing lower frets
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             for (let fret = 0; fret <= 24; fret++) {
                 const fretFreq = this.fretFrequencies[stringNum][fret];
@@ -18,12 +18,29 @@ class NoteMapper {
                 const percentDiff = (difference / fretFreq) * 100;
 
                 if (percentDiff <= tolerance) {
+                    // Calculate preference score favoring lower frets
+                    let preferenceScore = percentDiff;
+                    
+                    // Strong preference for open strings (fret 0)
+                    if (fret === 0) {
+                        preferenceScore *= 0.1; // Heavy bonus for open strings
+                    }
+                    // Preference for first 5 frets
+                    else if (fret <= 5) {
+                        preferenceScore *= 0.5; // Moderate bonus for low frets
+                    }
+                    // Penalty for high frets
+                    else if (fret > 12) {
+                        preferenceScore *= 2.0; // Penalty for high frets
+                    }
+
                     matches.push({
                         string: stringNum,
                         fret: fret,
                         frequency: fretFreq,
                         difference: difference,
-                        percentDiff: percentDiff
+                        percentDiff: percentDiff,
+                        preferenceScore: preferenceScore
                     });
                 }
             }
@@ -33,14 +50,10 @@ class NoteMapper {
             return null;
         }
 
-        // Sort by accuracy (smallest percentage difference)
-        matches.sort((a, b) => a.percentDiff - b.percentDiff);
+        // Sort by preference score (lower is better)
+        matches.sort((a, b) => a.preferenceScore - b.preferenceScore);
 
-        // Prefer lower frets if multiple options exist
-        const bestMatches = matches.filter(m => m.percentDiff === matches[0].percentDiff);
-        bestMatches.sort((a, b) => a.fret - b.fret);
-
-        return bestMatches[0];
+        return matches[0];
     }
 
     findAllPossiblePositions(frequency, tolerance = 5) {
@@ -53,18 +66,30 @@ class NoteMapper {
                 const percentDiff = (difference / fretFreq) * 100;
 
                 if (percentDiff <= tolerance) {
+                    // Apply same preference scoring as findBestFretPosition
+                    let preferenceScore = percentDiff;
+                    
+                    if (fret === 0) {
+                        preferenceScore *= 0.1;
+                    } else if (fret <= 5) {
+                        preferenceScore *= 0.5;
+                    } else if (fret > 12) {
+                        preferenceScore *= 2.0;
+                    }
+
                     matches.push({
                         string: stringNum,
                         fret: fret,
                         frequency: fretFreq,
                         difference: difference,
-                        percentDiff: percentDiff
+                        percentDiff: percentDiff,
+                        preferenceScore: preferenceScore
                     });
                 }
             }
         }
 
-        return matches.sort((a, b) => a.percentDiff - b.percentDiff);
+        return matches.sort((a, b) => a.preferenceScore - b.preferenceScore);
     }
 
     getOptimalFingering(notes) {

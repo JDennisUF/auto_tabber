@@ -4,9 +4,12 @@ class PitchDetector {
         this.bufferSize = bufferSize;
         this.sampleRate = audioContext.sampleRate;
         
-        // YIN algorithm parameters
-        this.threshold = 0.1;
+        // Lower threshold for better open string detection
+        this.threshold = 0.05;
         this.probabilityThreshold = 0.01;
+        
+        // Open string frequencies for reference
+        this.openStringFreqs = [82.41, 110.00, 146.83, 196.00, 246.94, 329.63];
         
         this.setupAnalyser();
     }
@@ -96,15 +99,25 @@ class PitchDetector {
     calculateConfidence(buffer, frequency) {
         if (!frequency) return 0;
         
-        // Simple confidence based on signal strength and consistency
+        // Signal strength component
         let rms = 0;
         for (let i = 0; i < buffer.length; i++) {
             rms += buffer[i] * buffer[i];
         }
         rms = Math.sqrt(rms / buffer.length);
         
-        // Normalize to 0-1 range
-        return Math.min(rms * 10, 1);
+        let confidence = Math.min(rms * 10, 1);
+        
+        // Boost confidence for open string frequencies
+        const isNearOpenString = this.openStringFreqs.some(openFreq => 
+            Math.abs(frequency - openFreq) / openFreq < 0.05
+        );
+        
+        if (isNearOpenString) {
+            confidence *= 1.5; // Boost confidence for open strings
+        }
+        
+        return Math.min(confidence, 1);
     }
 
     // FFT-based frequency analysis for validation

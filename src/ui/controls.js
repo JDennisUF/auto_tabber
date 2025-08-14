@@ -93,14 +93,14 @@ class UIControls {
             this.updateNoteDisplay(`${noteInfo.note}${noteInfo.octave}`);
         }
         
-        // Only process if confidence is high enough
-        if (confidence < 0.3) return;
+        // Lower confidence threshold for open strings detection
+        if (confidence < 0.2) return;
         
         // Debounce rapid detections
         if (timestamp - this.lastDetectedTime < 200) return;
         
-        // Find best fret position
-        const fretPosition = this.noteMapper.findBestFretPosition(frequency, 15);
+        // Use tighter tolerance to improve accuracy, especially for open strings
+        const fretPosition = this.noteMapper.findBestFretPosition(frequency, 8);
         
         if (fretPosition) {
             console.log(`Detected: ${frequency.toFixed(1)}Hz -> String ${fretPosition.string}, Fret ${fretPosition.fret}`);
