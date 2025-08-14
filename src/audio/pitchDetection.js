@@ -61,7 +61,7 @@ class PitchDetector {
         }
         rms = Math.sqrt(rms / SIZE);
         
-        if (rms < 0.01) return null; // Signal too quiet
+        if (rms < 0.005) return null; // More sensitive for low frequencies
 
         // Autocorrelation
         let lastCorrelation = 1;

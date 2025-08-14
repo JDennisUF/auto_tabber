@@ -8,6 +8,32 @@ class NoteMapper {
             return null;
         }
 
+        // First, check if this is very close to an open string frequency
+        const openStrings = [
+            { string: 6, frequency: 82.41 },   // Low E
+            { string: 5, frequency: 110.00 },  // A
+            { string: 4, frequency: 146.83 },  // D
+            { string: 3, frequency: 196.00 },  // G
+            { string: 2, frequency: 246.94 },  // B
+            { string: 1, frequency: 329.63 }   // High E
+        ];
+
+        // Check for exact open string matches first
+        for (const openString of openStrings) {
+            const percentDiff = Math.abs(frequency - openString.frequency) / openString.frequency * 100;
+            if (percentDiff <= 2.0) { // Very tight tolerance for open strings
+                console.log(`Direct open string match: ${frequency.toFixed(1)}Hz -> String ${openString.string}, Fret 0 (${percentDiff.toFixed(2)}% diff)`);
+                return {
+                    string: openString.string,
+                    fret: 0,
+                    frequency: openString.frequency,
+                    difference: Math.abs(frequency - openString.frequency),
+                    percentDiff: percentDiff,
+                    preferenceScore: percentDiff * 0.001
+                };
+            }
+        }
+
         const matches = [];
 
         // Check all string/fret combinations, prioritizing lower frets
@@ -23,11 +49,11 @@ class NoteMapper {
                     
                     // Massive preference for open strings (fret 0)
                     if (fret === 0) {
-                        preferenceScore *= 0.01; // Huge bonus for open strings
+                        preferenceScore *= 0.001; // Even bigger bonus for open strings
                     }
                     // Strong preference for first 5 frets
                     else if (fret <= 5) {
-                        preferenceScore *= 0.1; // Strong bonus for low frets
+                        preferenceScore *= 0.05; // Stronger bonus for low frets
                     }
                     // Moderate preference for frets 6-12
                     else if (fret <= 12) {
@@ -35,7 +61,7 @@ class NoteMapper {
                     }
                     // Heavy penalty for high frets
                     else {
-                        preferenceScore *= 10.0; // Heavy penalty for high frets
+                        preferenceScore *= 20.0; // Even heavier penalty for high frets
                     }
 
                     matches.push({
@@ -61,7 +87,7 @@ class NoteMapper {
         if (matches.length > 0) {
             console.log(`Frequency ${frequency.toFixed(1)}Hz matches:`, 
                 matches.slice(0, 3).map(m => 
-                    `String ${m.string} Fret ${m.fret} (${m.percentDiff.toFixed(2)}% diff, score: ${m.preferenceScore.toFixed(3)})`
+                    `String ${m.string} Fret ${m.fret} (${m.percentDiff.toFixed(2)}% diff, score: ${m.preferenceScore.toFixed(4)})`
                 )
             );
             console.log(`Chosen: String ${matches[0].string}, Fret ${matches[0].fret}`);
