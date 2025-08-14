@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Tabber - Guitar Tablature Generator</title>
+    <link rel="stylesheet" href="src/ui/styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Auto Tabber</h1>
+            <p>Real-time guitar tablature generation</p>
+        </header>
+
+        <main>
+            <section id="controls">
+                <button id="startBtn">Start Listening</button>
+                <button id="stopBtn" disabled>Stop</button>
+                <button id="clearBtn">Clear Tab</button>
+            </section>
+
+            <section id="status">
+                <div id="statusDisplay">Ready to listen...</div>
+                <div id="frequencyDisplay">Frequency: --</div>
+                <div id="noteDisplay">Note: --</div>
+            </section>
+
+            <section id="tablature">
+                <canvas id="tabCanvas" width="800" height="200"></canvas>
+            </section>
+        </main>
+    </div>
+
+    <script src="src/audio/capture.js"></script>
+    <script src="src/audio/pitchDetection.js"></script>
+    <script src="src/guitar/tuning.js"></script>
+    <script src="src/guitar/noteMapping.js"></script>
+    <script src="src/ui/display.js"></script>
+    <script src="src/ui/controls.js"></script>
+    <script src="src/main.js"></script>
+</body>
+</html>

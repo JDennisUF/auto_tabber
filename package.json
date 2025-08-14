@@ -1,0 +1,18 @@
+{
+  "name": "auto-tabber",
+  "version": "1.0.0",
+  "description": "Guitar tablature generator that listens to music and automatically creates tabs",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "npx http-server . -p 8080 -o",
+    "build": "echo 'No build step required for vanilla JS'",
+    "test": "echo 'Tests not yet implemented'",
+    "lint": "echo 'Linting not yet configured'"
+  },
+  "keywords": ["guitar", "tablature", "audio", "music", "pitch-detection"],
+  "author": "Auto Tabber Team",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
