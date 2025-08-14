@@ -111,20 +111,11 @@ class TablatureDisplay {
         const y = this.stringYPositions[note.string - 1];
         const x = note.x;
         
-        // Draw fret number
+        // Draw fret number (including 0 for open strings)
         this.ctx.fillStyle = '#000';
         this.ctx.font = 'bold 16px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.fillText(note.fret.toString(), x, y + 5);
-        
-        // Draw note circle for open strings
-        if (note.fret === 0) {
-            this.ctx.strokeStyle = '#000';
-            this.ctx.lineWidth = 2;
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, 8, 0, 2 * Math.PI);
-            this.ctx.stroke();
-        }
     }
 
     drawCursor() {
