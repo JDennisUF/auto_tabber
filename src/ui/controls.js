@@ -102,8 +102,22 @@ class UIControls {
         // Use generous tolerance to catch all possible matches, let preference scoring decide
         const fretPosition = this.noteMapper.findBestFretPosition(frequency, 12);
         
+        console.log(`\n🚨 EMERGENCY DEBUG 🚨`);
+        console.log(`Input frequency: ${frequency.toFixed(1)}Hz`);
+        console.log(`Returned fretPosition:`, fretPosition);
+        
         if (fretPosition) {
-            console.log(`Detected: ${frequency.toFixed(1)}Hz -> String ${fretPosition.string}, Fret ${fretPosition.fret}`);
+            console.log(`✅ Got fretPosition: String ${fretPosition.string}, Fret ${fretPosition.fret}`);
+            
+            // EMERGENCY CHECK: This should NEVER trigger
+            if (fretPosition.fret > 4) {
+                console.error(`🔥🔥🔥 IMPOSSIBLE: Fret ${fretPosition.fret} > 4 detected! 🔥🔥🔥`);
+                console.error(`This should be impossible! Source:`, fretPosition);
+                console.trace("Call stack trace:");
+                return; // Don't display the invalid fret
+            }
+            
+            console.log(`📝 Adding to tablature: String ${fretPosition.string}, Fret ${fretPosition.fret}`);
             
             // Add to tablature
             this.tablatureDisplay.addNote(fretPosition);
@@ -112,6 +126,8 @@ class UIControls {
             this.updateStatus(`Note detected: String ${fretPosition.string}, Fret ${fretPosition.fret}`, 'success');
             
             this.lastDetectedTime = timestamp;
+        } else {
+            console.log(`❌ No fretPosition returned`);
         }
     }
 

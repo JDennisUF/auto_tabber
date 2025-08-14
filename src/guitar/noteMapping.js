@@ -10,23 +10,26 @@ class NoteMapper {
             return null;
         }
 
-        console.log(`\n=== ANALYZING FREQUENCY: ${frequency.toFixed(1)}Hz ===`);
+        console.log(`\n🔍 === ANALYZING FREQUENCY: ${frequency.toFixed(1)}Hz ===`);
+        console.log(`🔒 HARD LIMIT: Only checking frets 0-4`);
 
         // Manually calculate frequencies for frets 0-4 ONLY
         const openStringFreqs = [82.41, 110.00, 146.83, 196.00, 246.94, 329.63];
         const matches = [];
 
+        console.log(`🔢 Starting loop: stringNum 1-6, fret 0-4`);
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             const openFreq = openStringFreqs[stringNum - 1];
             
             for (let fret = 0; fret <= 4; fret++) { // ABSOLUTELY NO FRETS ABOVE 4
+                console.log(`  🔍 Checking String ${stringNum}, Fret ${fret}`);
                 // Calculate frequency for this fret position
                 const fretFreq = openFreq * Math.pow(2, fret / 12);
                 const difference = Math.abs(frequency - fretFreq);
                 const percentDiff = (difference / fretFreq) * 100;
 
                 if (percentDiff <= tolerance) {
-                    console.log(`  Match: String ${stringNum}, Fret ${fret} = ${fretFreq.toFixed(1)}Hz (${percentDiff.toFixed(2)}% diff)`);
+                    console.log(`  ✅ Match: String ${stringNum}, Fret ${fret} = ${fretFreq.toFixed(1)}Hz (${percentDiff.toFixed(2)}% diff)`);
                     
                     // Simple scoring: heavily favor open strings
                     let score = percentDiff;
@@ -34,14 +37,26 @@ class NoteMapper {
                         score *= 0.01; // Huge preference for open strings
                     }
 
-                    matches.push({
+                    const matchObj = {
                         string: stringNum,
                         fret: fret,
                         frequency: fretFreq,
                         difference: difference,
                         percentDiff: percentDiff,
                         preferenceScore: score
-                    });
+                    };
+                    
+                    // CRITICAL CHECK: This should NEVER happen
+                    if (matchObj.fret > 4) {
+                        console.error(`💥 IMPOSSIBLE: Created match with fret ${matchObj.fret} > 4!`);
+                        console.error(`String: ${stringNum}, Loop fret var: ${fret}`);
+                        throw new Error(`Algorithm error: fret ${matchObj.fret} > 4`);
+                    }
+                    
+                    console.log(`  📝 Adding match: String ${matchObj.string}, Fret ${matchObj.fret}`);
+                    matches.push(matchObj);
+                } else {
+                    console.log(`  ❌ No match: String ${stringNum}, Fret ${fret} = ${fretFreq.toFixed(1)}Hz (${percentDiff.toFixed(2)}% diff > ${tolerance}%)`);
                 }
             }
         }
@@ -55,14 +70,17 @@ class NoteMapper {
         matches.sort((a, b) => a.preferenceScore - b.preferenceScore);
         
         const chosen = matches[0];
-        console.log(`  CHOSEN: String ${chosen.string}, Fret ${chosen.fret} (score: ${chosen.preferenceScore.toFixed(4)})`);
+        console.log(`  🎯 CHOSEN: String ${chosen.string}, Fret ${chosen.fret} (score: ${chosen.preferenceScore.toFixed(4)})`);
         
         // SAFETY CHECK: Ensure fret is never above 4
         if (chosen.fret > 4) {
-            console.error("CRITICAL ERROR: Fret above 4 detected!");
-            return null;
+            console.error(`🔥🔥🔥 CRITICAL ERROR: Fret ${chosen.fret} > 4 detected in final result! 🔥🔥🔥`);
+            console.error(`Full chosen object:`, chosen);
+            console.error(`All matches:`, matches);
+            throw new Error(`Final safety check failed: fret ${chosen.fret} > 4`);
         }
 
+        console.log(`  ✅ Returning valid result: String ${chosen.string}, Fret ${chosen.fret}`);
         return chosen;
     }
 
