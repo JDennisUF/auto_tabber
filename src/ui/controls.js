@@ -99,8 +99,14 @@ class UIControls {
         // Debounce rapid detections
         if (timestamp - this.lastDetectedTime < 200) return;
         
-        // Use tighter tolerance to improve accuracy, especially for open strings
-        const fretPosition = this.noteMapper.findBestFretPosition(frequency, 8);
+        // Use very tight tolerance for open strings, looser for others
+        const openStringFreqs = [82.41, 110.00, 146.83, 196.00, 246.94, 329.63];
+        const isNearOpenString = openStringFreqs.some(openFreq => 
+            Math.abs(frequency - openFreq) / openFreq < 0.03
+        );
+        
+        const tolerance = isNearOpenString ? 3 : 8; // Very tight for open strings
+        const fretPosition = this.noteMapper.findBestFretPosition(frequency, tolerance);
         
         if (fretPosition) {
             console.log(`Detected: ${frequency.toFixed(1)}Hz -> String ${fretPosition.string}, Fret ${fretPosition.fret}`);
