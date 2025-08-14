@@ -1,6 +1,8 @@
 class NoteMapper {
     constructor() {
-        this.fretFrequencies = GuitarTuning.getAllFretFrequencies();
+        // NO MORE CACHED FREQUENCIES - calculate everything on demand
+        // This eliminates any possibility of high fret numbers
+        console.log("NoteMapper initialized - ONLY frets 0-4 allowed");
     }
 
     findBestFretPosition(frequency, tolerance = 10) {
@@ -10,14 +12,14 @@ class NoteMapper {
 
         console.log(`\n=== ANALYZING FREQUENCY: ${frequency.toFixed(1)}Hz ===`);
 
-        // Manually calculate frequencies for frets 0-5 ONLY
+        // Manually calculate frequencies for frets 0-4 ONLY
         const openStringFreqs = [82.41, 110.00, 146.83, 196.00, 246.94, 329.63];
         const matches = [];
 
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             const openFreq = openStringFreqs[stringNum - 1];
             
-            for (let fret = 0; fret <= 5; fret++) { // ABSOLUTELY NO FRETS ABOVE 5
+            for (let fret = 0; fret <= 4; fret++) { // ABSOLUTELY NO FRETS ABOVE 4
                 // Calculate frequency for this fret position
                 const fretFreq = openFreq * Math.pow(2, fret / 12);
                 const difference = Math.abs(frequency - fretFreq);
@@ -55,9 +57,9 @@ class NoteMapper {
         const chosen = matches[0];
         console.log(`  CHOSEN: String ${chosen.string}, Fret ${chosen.fret} (score: ${chosen.preferenceScore.toFixed(4)})`);
         
-        // SAFETY CHECK: Ensure fret is never above 5
-        if (chosen.fret > 5) {
-            console.error("CRITICAL ERROR: Fret above 5 detected!");
+        // SAFETY CHECK: Ensure fret is never above 4
+        if (chosen.fret > 4) {
+            console.error("CRITICAL ERROR: Fret above 4 detected!");
             return null;
         }
 
@@ -72,7 +74,7 @@ class NoteMapper {
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             const openFreq = openStringFreqs[stringNum - 1];
             
-            for (let fret = 0; fret <= 5; fret++) { // ABSOLUTELY NO FRETS ABOVE 5
+            for (let fret = 0; fret <= 4; fret++) { // ABSOLUTELY NO FRETS ABOVE 4
                 const fretFreq = openFreq * Math.pow(2, fret / 12);
                 const difference = Math.abs(frequency - fretFreq);
                 const percentDiff = (difference / fretFreq) * 100;

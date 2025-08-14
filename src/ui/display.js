@@ -79,6 +79,12 @@ class TablatureDisplay {
     addNote(fretPosition) {
         if (!fretPosition) return;
         
+        // SAFETY CHECK: Reject any fret above 4
+        if (fretPosition.fret > 4) {
+            console.error(`CRITICAL: Rejecting fret ${fretPosition.fret} > 4 on string ${fretPosition.string}`);
+            return;
+        }
+        
         const note = {
             string: fretPosition.string,
             fret: fretPosition.fret,
