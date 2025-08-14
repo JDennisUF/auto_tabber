@@ -36,9 +36,9 @@ class NoteMapper {
 
         const matches = [];
 
-        // Check all string/fret combinations, prioritizing lower frets
+        // ONLY check frets 0-5 to keep tablature in open position
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
-            for (let fret = 0; fret <= 24; fret++) {
+            for (let fret = 0; fret <= 5; fret++) { // STRICT: Only first 5 frets
                 const fretFreq = this.fretFrequencies[stringNum][fret];
                 const difference = Math.abs(frequency - fretFreq);
                 const percentDiff = (difference / fretFreq) * 100;
@@ -49,19 +49,11 @@ class NoteMapper {
                     
                     // Massive preference for open strings (fret 0)
                     if (fret === 0) {
-                        preferenceScore *= 0.001; // Even bigger bonus for open strings
+                        preferenceScore *= 0.01; // Huge bonus for open strings
                     }
-                    // Strong preference for first 5 frets
-                    else if (fret <= 5) {
-                        preferenceScore *= 0.05; // Stronger bonus for low frets
-                    }
-                    // Moderate preference for frets 6-12
-                    else if (fret <= 12) {
-                        preferenceScore *= 1.0; // Normal scoring
-                    }
-                    // Heavy penalty for high frets
+                    // Preference for frets 1-5
                     else {
-                        preferenceScore *= 20.0; // Even heavier penalty for high frets
+                        preferenceScore *= 1.0; // Normal scoring for frets 1-5
                     }
 
                     matches.push({
@@ -99,8 +91,9 @@ class NoteMapper {
     findAllPossiblePositions(frequency, tolerance = 5) {
         const matches = [];
 
+        // ONLY check frets 0-5 to keep tablature in open position
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
-            for (let fret = 0; fret <= 24; fret++) {
+            for (let fret = 0; fret <= 5; fret++) { // STRICT: Only first 5 frets
                 const fretFreq = this.fretFrequencies[stringNum][fret];
                 const difference = Math.abs(frequency - fretFreq);
                 const percentDiff = (difference / fretFreq) * 100;
@@ -111,12 +104,8 @@ class NoteMapper {
                     
                     if (fret === 0) {
                         preferenceScore *= 0.01;
-                    } else if (fret <= 5) {
-                        preferenceScore *= 0.1;
-                    } else if (fret <= 12) {
-                        preferenceScore *= 1.0;
                     } else {
-                        preferenceScore *= 10.0;
+                        preferenceScore *= 1.0;
                     }
 
                     matches.push({

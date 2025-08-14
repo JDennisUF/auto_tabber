@@ -63,9 +63,13 @@ class PitchDetector {
         
         if (rms < 0.005) return null; // More sensitive for low frequencies
 
-        // Autocorrelation
+        // Autocorrelation - look for fundamental frequency first
         let lastCorrelation = 1;
-        for (let offset = 0; offset < MAX_SAMPLES; offset++) {
+        
+        // Start looking from a minimum offset to avoid harmonics
+        const minOffset = Math.floor(this.sampleRate / 1200); // Don't look above 1200Hz
+        
+        for (let offset = minOffset; offset < MAX_SAMPLES; offset++) {
             let correlation = 0;
 
             for (let i = 0; i < MAX_SAMPLES; i++) {
@@ -89,11 +93,40 @@ class PitchDetector {
         }
 
         if (bestCorrelation > this.threshold && bestOffset !== -1) {
-            const frequency = this.sampleRate / bestOffset;
+            let frequency = this.sampleRate / bestOffset;
+            
+            // Check if this might be a harmonic and try to find the fundamental
+            frequency = this.findFundamental(frequency, correlations, bestOffset);
+            
             return frequency;
         }
         
         return null;
+    }
+
+    findFundamental(detectedFreq, correlations, bestOffset) {
+        // Check if detected frequency might be a harmonic
+        // Look for subharmonics (half, third, quarter of detected frequency)
+        const possibleFundamentals = [
+            detectedFreq / 2,    // Second harmonic
+            detectedFreq / 3,    // Third harmonic  
+            detectedFreq / 4     // Fourth harmonic
+        ];
+        
+        for (const fundamental of possibleFundamentals) {
+            // Check if this fundamental is in guitar range
+            if (fundamental >= 80 && fundamental <= 400) {
+                const expectedOffset = Math.round(this.sampleRate / fundamental);
+                
+                // Check if there's correlation at the fundamental frequency
+                if (expectedOffset < correlations.length && correlations[expectedOffset] > 0.3) {
+                    console.log(`Found fundamental: ${fundamental.toFixed(1)}Hz (was detecting harmonic at ${detectedFreq.toFixed(1)}Hz)`);
+                    return fundamental;
+                }
+            }
+        }
+        
+        return detectedFreq;
     }
 
     calculateConfidence(buffer, frequency) {
