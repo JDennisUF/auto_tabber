@@ -8,52 +8,28 @@ class NoteMapper {
             return null;
         }
 
-        // First, check if this is very close to an open string frequency
-        const openStrings = [
-            { string: 6, frequency: 82.41 },   // Low E
-            { string: 5, frequency: 110.00 },  // A
-            { string: 4, frequency: 146.83 },  // D
-            { string: 3, frequency: 196.00 },  // G
-            { string: 2, frequency: 246.94 },  // B
-            { string: 1, frequency: 329.63 }   // High E
-        ];
+        console.log(`\n=== ANALYZING FREQUENCY: ${frequency.toFixed(1)}Hz ===`);
 
-        // Check for exact open string matches first
-        for (const openString of openStrings) {
-            const percentDiff = Math.abs(frequency - openString.frequency) / openString.frequency * 100;
-            if (percentDiff <= 2.0) { // Very tight tolerance for open strings
-                console.log(`Direct open string match: ${frequency.toFixed(1)}Hz -> String ${openString.string}, Fret 0 (${percentDiff.toFixed(2)}% diff)`);
-                return {
-                    string: openString.string,
-                    fret: 0,
-                    frequency: openString.frequency,
-                    difference: Math.abs(frequency - openString.frequency),
-                    percentDiff: percentDiff,
-                    preferenceScore: percentDiff * 0.001
-                };
-            }
-        }
-
+        // Manually calculate frequencies for frets 0-5 ONLY
+        const openStringFreqs = [82.41, 110.00, 146.83, 196.00, 246.94, 329.63];
         const matches = [];
 
-        // ONLY check frets 0-5 to keep tablature in open position
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
-            for (let fret = 0; fret <= 5; fret++) { // STRICT: Only first 5 frets
-                const fretFreq = this.fretFrequencies[stringNum][fret];
+            const openFreq = openStringFreqs[stringNum - 1];
+            
+            for (let fret = 0; fret <= 5; fret++) { // ABSOLUTELY NO FRETS ABOVE 5
+                // Calculate frequency for this fret position
+                const fretFreq = openFreq * Math.pow(2, fret / 12);
                 const difference = Math.abs(frequency - fretFreq);
                 const percentDiff = (difference / fretFreq) * 100;
 
                 if (percentDiff <= tolerance) {
-                    // Calculate preference score heavily favoring lower frets
-                    let preferenceScore = percentDiff;
+                    console.log(`  Match: String ${stringNum}, Fret ${fret} = ${fretFreq.toFixed(1)}Hz (${percentDiff.toFixed(2)}% diff)`);
                     
-                    // Massive preference for open strings (fret 0)
+                    // Simple scoring: heavily favor open strings
+                    let score = percentDiff;
                     if (fret === 0) {
-                        preferenceScore *= 0.01; // Huge bonus for open strings
-                    }
-                    // Preference for frets 1-5
-                    else {
-                        preferenceScore *= 1.0; // Normal scoring for frets 1-5
+                        score *= 0.01; // Huge preference for open strings
                     }
 
                     matches.push({
@@ -62,50 +38,49 @@ class NoteMapper {
                         frequency: fretFreq,
                         difference: difference,
                         percentDiff: percentDiff,
-                        preferenceScore: preferenceScore
+                        preferenceScore: score
                     });
                 }
             }
         }
 
         if (matches.length === 0) {
+            console.log("  NO MATCHES FOUND");
             return null;
         }
 
-        // Sort by preference score (lower is better)
+        // Sort by preference score
         matches.sort((a, b) => a.preferenceScore - b.preferenceScore);
-
-        // Debug logging to see what's being chosen
-        if (matches.length > 0) {
-            console.log(`Frequency ${frequency.toFixed(1)}Hz matches:`, 
-                matches.slice(0, 3).map(m => 
-                    `String ${m.string} Fret ${m.fret} (${m.percentDiff.toFixed(2)}% diff, score: ${m.preferenceScore.toFixed(4)})`
-                )
-            );
-            console.log(`Chosen: String ${matches[0].string}, Fret ${matches[0].fret}`);
+        
+        const chosen = matches[0];
+        console.log(`  CHOSEN: String ${chosen.string}, Fret ${chosen.fret} (score: ${chosen.preferenceScore.toFixed(4)})`);
+        
+        // SAFETY CHECK: Ensure fret is never above 5
+        if (chosen.fret > 5) {
+            console.error("CRITICAL ERROR: Fret above 5 detected!");
+            return null;
         }
 
-        return matches[0];
+        return chosen;
     }
 
     findAllPossiblePositions(frequency, tolerance = 5) {
+        // Use the same logic as findBestFretPosition but return all matches
+        const openStringFreqs = [82.41, 110.00, 146.83, 196.00, 246.94, 329.63];
         const matches = [];
 
-        // ONLY check frets 0-5 to keep tablature in open position
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
-            for (let fret = 0; fret <= 5; fret++) { // STRICT: Only first 5 frets
-                const fretFreq = this.fretFrequencies[stringNum][fret];
+            const openFreq = openStringFreqs[stringNum - 1];
+            
+            for (let fret = 0; fret <= 5; fret++) { // ABSOLUTELY NO FRETS ABOVE 5
+                const fretFreq = openFreq * Math.pow(2, fret / 12);
                 const difference = Math.abs(frequency - fretFreq);
                 const percentDiff = (difference / fretFreq) * 100;
 
                 if (percentDiff <= tolerance) {
-                    // Apply same preference scoring as findBestFretPosition
-                    let preferenceScore = percentDiff;
-                    
+                    let score = percentDiff;
                     if (fret === 0) {
-                        preferenceScore *= 0.01;
-                    } else {
-                        preferenceScore *= 1.0;
+                        score *= 0.01;
                     }
 
                     matches.push({
@@ -114,7 +89,7 @@ class NoteMapper {
                         frequency: fretFreq,
                         difference: difference,
                         percentDiff: percentDiff,
-                        preferenceScore: preferenceScore
+                        preferenceScore: score
                     });
                 }
             }
